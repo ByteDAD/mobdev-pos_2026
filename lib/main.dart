@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'models/pos_scope.dart';
 import 'models/pos_store.dart';
 import 'screens/about_page.dart';
-import 'screens/checkout_page.dart';
 import 'screens/dashboard_page.dart';
 import 'screens/login_page.dart';
+import 'screens/notifications_page.dart';
 import 'screens/products_page.dart';
+import 'screens/logs_page.dart';
+import 'screens/purchase_orders_page.dart';
+import 'screens/settings_page.dart';
+import 'screens/suppliers_page.dart';
 import 'theme.dart';
 import 'widgets/shonk_logo.dart';
+import 'widgets/bell_button.dart';
 
 void main() {
   runApp(const PosApp());
@@ -61,7 +66,7 @@ class _HomeShellState extends State<HomeShell> {
   final List<Widget> _pages = const [
     DashboardPage(),
     ProductsPage(),
-    CheckoutPage(),
+    PurchaseOrdersPage(),
     AboutPage(),
   ];
 
@@ -69,6 +74,14 @@ class _HomeShellState extends State<HomeShell> {
   void initState() {
     super.initState();
   }
+
+  Future<void> _openNotifications(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationsPage()),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +97,12 @@ class _HomeShellState extends State<HomeShell> {
         ),
         title: Text(_titleForIndex(_currentIndex)),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications),
+          BellButton(
+            count: (PosScope.of(context).notificationsEnabled &&
+                    PosScope.of(context).showNotificationBadge)
+                ? PosScope.of(context).logs.length
+                : 0,
+            onPressed: () => _openNotifications(context),
           ),
         ],
       ),
@@ -122,7 +138,7 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
-            label: 'Kasir',
+            label: 'Pembelian',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
@@ -168,7 +184,7 @@ class _AppDrawer extends StatelessWidget {
         : (profile?.username ?? 'User');
 
     return Drawer(
-      backgroundColor: const Color(0xFF32335A),
+      backgroundColor: AppTheme.drawerBackground,
       child: SafeArea(
         child: Column(
           children: [
@@ -181,11 +197,7 @@ class _AppDrawer extends StatelessWidget {
               subtitleColor: Colors.white70,
             ),
             const SizedBox(height: 12),
-            const CircleAvatar(
-              radius: 32,
-              backgroundColor: Color(0xFF50548C),
-              child: Icon(Icons.person, color: Colors.white, size: 32),
-            ),
+            _DrawerAvatar(url: profile?.photoUrl ?? ''),
             const SizedBox(height: 12),
             const Text(
               'Purchasing',
@@ -218,20 +230,20 @@ class _AppDrawer extends StatelessWidget {
               icon: Icons.group_outlined,
               label: 'Supplier',
               selected: false,
-              onTap: () => _showPlaceholder(context, 'Supplier'),
+              onTap: () => _openSuppliers(context),
             ),
             _DrawerItem(
               icon: Icons.receipt_long_outlined,
               label: 'Log',
               selected: false,
-              onTap: () => _showPlaceholder(context, 'Log'),
+              onTap: () => _openLogs(context),
             ),
             const Divider(color: Colors.white30, height: 24),
             _DrawerItem(
               icon: Icons.settings_outlined,
               label: 'Pengaturan',
               selected: false,
-              onTap: () => _showPlaceholder(context, 'Pengaturan'),
+              onTap: () => _openSettings(context),
             ),
             _DrawerItem(
               icon: Icons.logout,
@@ -265,6 +277,31 @@ class _AppDrawer extends StatelessWidget {
       SnackBar(content: Text('$label belum dibuat.')),
     );
   }
+
+  Future<void> _openSettings(BuildContext context) async {
+    Navigator.pop(context);
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SettingsPage()),
+    );
+  }
+
+  Future<void> _openSuppliers(BuildContext context) async {
+    Navigator.pop(context);
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SuppliersPage()),
+    );
+  }
+
+  Future<void> _openLogs(BuildContext context) async {
+    Navigator.pop(context);
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LogsPage()),
+    );
+  }
+
 }
 
 class _DrawerItem extends StatelessWidget {
@@ -289,6 +326,39 @@ class _DrawerItem extends StatelessWidget {
       selectedTileColor: const Color(0xFFE57C2C),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: onTap,
+    );
+  }
+}
+
+class _DrawerAvatar extends StatelessWidget {
+  const _DrawerAvatar({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUrl = url.trim().isNotEmpty;
+    if (!hasUrl) {
+      return const CircleAvatar(
+        radius: 32,
+        backgroundColor: AppTheme.drawerAvatar,
+        child: Icon(Icons.person, color: Colors.white, size: 32),
+      );
+    }
+    return ClipOval(
+      child: Image.network(
+        url,
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) {
+          return const CircleAvatar(
+            radius: 32,
+            backgroundColor: AppTheme.drawerAvatar,
+            child: Icon(Icons.person, color: Colors.white, size: 32),
+          );
+        },
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/pos_scope.dart';
 import '../models/product.dart';
+import 'suppliers_page.dart';
 
 class PurchaseFormPage extends StatefulWidget {
   const PurchaseFormPage({super.key});
@@ -11,16 +12,15 @@ class PurchaseFormPage extends StatefulWidget {
 }
 
 class _PurchaseFormPageState extends State<PurchaseFormPage> {
-  final TextEditingController _supplierController = TextEditingController();
   TimeOfDay? _time;
   DateTime? _date;
   final List<_PurchaseLine> _lines = [
     _PurchaseLine(),
   ];
+  int? _supplierId;
 
   @override
   void dispose() {
-    _supplierController.dispose();
     super.dispose();
   }
 
@@ -28,6 +28,7 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
   Widget build(BuildContext context) {
     final store = PosScope.of(context);
     final products = store.products;
+    final suppliers = store.suppliers;
 
     if (products.isEmpty) {
       return Scaffold(
@@ -40,6 +41,27 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
         ),
       );
     }
+    if (suppliers.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Tambah Pembelian')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Tambahkan supplier terlebih dahulu.'),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () => _openSuppliers(context),
+                  child: const Text('Tambah Supplier'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tambah Pembelian')),
@@ -47,9 +69,30 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            TextField(
-              controller: _supplierController,
+            DropdownButtonFormField<int>(
+              value: _supplierId,
+              items: suppliers
+                  .map(
+                    (supplier) => DropdownMenuItem<int>(
+                      value: supplier.id,
+                      child: Text(supplier.name),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _supplierId = value;
+                });
+              },
               decoration: const InputDecoration(labelText: 'Pilih Supplier'),
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => _openSuppliers(context),
+                child: const Text('Edit Supplier'),
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -239,6 +282,12 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
   }
 
   void _save(BuildContext context, List<Product> products) {
+    if (_supplierId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih supplier terlebih dahulu.')),
+      );
+      return;
+    }
     final cart = <int, int>{};
 
     for (final line in _lines) {
@@ -271,8 +320,20 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
     }
 
     final store = PosScope.of(context);
-    store.setCart(cart); // apply cart
+    store.createOrder(
+      supplierId: _supplierId!,
+      items: cart,
+      time: _time,
+      date: _date,
+    );
     Navigator.pop(context);
+  }
+
+  Future<void> _openSuppliers(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SuppliersPage()),
+    );
   }
 
   String _formatDate(DateTime date) {
