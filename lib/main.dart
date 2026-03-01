@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'models/pos_scope.dart';
+import 'models/pos_store.dart';
 import 'screens/about_page.dart';
 import 'screens/checkout_page.dart';
 import 'screens/products_page.dart';
@@ -42,6 +44,7 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
+  late final PosStore _store;
 
   final List<Widget> _pages = const [
     ProductsPage(),
@@ -50,38 +53,47 @@ class _HomeShellState extends State<HomeShell> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _store = PosStore();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_titleForIndex(_currentIndex)),
-      ),
-      body: SafeArea(
-        child: _pages[_currentIndex],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'Produk',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Kasir',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Tentang',
-          ),
-        ],
+    return PosScope(
+      store: _store,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_titleForIndex(_currentIndex)),
+        ),
+        body: SafeArea(
+          child: _pages[_currentIndex],
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory_2),
+              label: 'Produk',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.receipt_long_outlined),
+              selectedIcon: Icon(Icons.receipt_long),
+              label: 'Kasir',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Tentang',
+            ),
+          ],
+        ),
       ),
     );
   }
