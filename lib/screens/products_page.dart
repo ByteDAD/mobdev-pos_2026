@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../constants/product_options.dart';
 import '../models/pos_scope.dart';
 import '../models/product.dart';
 import '../widgets/search_field.dart';
@@ -16,6 +17,10 @@ class _ProductsPageState extends State<ProductsPage>
     with SingleTickerProviderStateMixin {
   String _query = '';
   late final TabController _tabController;
+  String _categoryFilter = 'Semua';
+  String _weightFilter = 'Semua';
+  String _brandFilter = 'Semua';
+  bool _showFilters = false;
 
   @override
   void initState() {
@@ -34,6 +39,14 @@ class _ProductsPageState extends State<ProductsPage>
     final store = PosScope.of(context);
     final products = store.products
         .where((product) => product.name.toLowerCase().contains(_query))
+        .where((product) =>
+            _categoryFilter == 'Semua' ||
+            product.category == _categoryFilter)
+        .where((product) =>
+            _weightFilter == 'Semua' ||
+            product.weightCategory == _weightFilter)
+        .where((product) =>
+            _brandFilter == 'Semua' || product.brand == _brandFilter)
         .toList();
 
     return Column(
@@ -55,7 +68,88 @@ class _ProductsPageState extends State<ProductsPage>
                 _query = value.trim().toLowerCase(); // filter text
               });
             },
+            onFilterTap: () {
+              setState(() {
+                _showFilters = !_showFilters;
+              });
+            },
+            isFilterActive: _showFilters,
           ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Column(
+              children: [
+                DropdownButtonFormField<String>(
+                  value: _categoryFilter,
+                  items: ['Semua', ...ProductOptions.categories]
+                      .map(
+                        (value) => DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() {
+                      _categoryFilter = value;
+                    });
+                  },
+                  decoration: const InputDecoration(labelText: 'Kategori'),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: _weightFilter,
+                  items: ['Semua', ...ProductOptions.weightCategories]
+                      .map(
+                        (value) => DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() {
+                      _weightFilter = value;
+                    });
+                  },
+                  decoration: const InputDecoration(labelText: 'Kategori Berat'),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: _brandFilter,
+                  items: ['Semua', ...ProductOptions.brands]
+                      .map(
+                        (value) => DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() {
+                      _brandFilter = value;
+                    });
+                  },
+                  decoration: const InputDecoration(labelText: 'Merk'),
+                ),
+              ],
+            ),
+          ),
+          crossFadeState:
+              _showFilters ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 200),
         ),
         Expanded(
           child: products.isEmpty
@@ -73,6 +167,8 @@ class _ProductsPageState extends State<ProductsPage>
                         existing: product,
                       ),
                       onDelete: () => _confirmDelete(context, product),
+                      onToggleFavorite: () =>
+                          store.toggleFavorite(product.id),
                     );
                   },
                 ),
@@ -163,11 +259,13 @@ class _ProductCard extends StatelessWidget {
     required this.product,
     required this.onEdit,
     required this.onDelete,
+    required this.onToggleFavorite,
   });
 
   final Product product;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onToggleFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -176,15 +274,7 @@ class _ProductCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFFECEFF8),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.image, color: Color(0xFF8B93B3)),
-            ),
+            _ProductThumb(url: product.imageUrl),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -202,6 +292,16 @@ class _ProductCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                IconButton(
+                  tooltip: 'Favorit',
+                  onPressed: onToggleFavorite,
+                  icon: Icon(
+                    product.isFavorite ? Icons.star : Icons.star_border,
+                    color: product.isFavorite
+                        ? Theme.of(context).colorScheme.secondary
+                        : Colors.grey,
+                  ),
+                ),
                 Text(
                   'Stok: ${product.stock}',
                   style: const TextStyle(color: Colors.grey),
@@ -226,6 +326,45 @@ class _ProductCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ProductThumb extends StatelessWidget {
+  const _ProductThumb({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUrl = url.trim().isNotEmpty;
+    if (!hasUrl) {
+      return Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0xFFECEFF8),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.image, color: Color(0xFF8B93B3)),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image.network(
+        url,
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) {
+          return Container(
+            width: 48,
+            height: 48,
+            color: const Color(0xFFECEFF8),
+            child: const Icon(Icons.broken_image, color: Color(0xFF8B93B3)),
+          );
+        },
       ),
     );
   }
