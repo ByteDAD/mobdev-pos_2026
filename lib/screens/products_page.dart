@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/pos_scope.dart';
 import '../models/product.dart';
+import '../widgets/search_field.dart';
 import 'product_form_page.dart';
 
 class ProductsPage extends StatefulWidget {
@@ -11,8 +12,22 @@ class ProductsPage extends StatefulWidget {
   State<ProductsPage> createState() => _ProductsPageState();
 }
 
-class _ProductsPageState extends State<ProductsPage> {
+class _ProductsPageState extends State<ProductsPage>
+    with SingleTickerProviderStateMixin {
   String _query = '';
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 1, vsync: this); // single tab
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,53 +36,48 @@ class _ProductsPageState extends State<ProductsPage> {
         .where((product) => product.name.toLowerCase().contains(_query))
         .toList();
 
-    return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Cari produk',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          indicatorColor: Theme.of(context).colorScheme.primary,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Colors.grey,
+          tabs: const [
+            Tab(text: 'Produk'),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: SearchField(
+            onChanged: (value) {
+              setState(() {
+                _query = value.trim().toLowerCase(); // filter text
+              });
+            },
+          ),
+        ),
+        Expanded(
+          child: products.isEmpty
+              ? _EmptyState(onAdd: () => _openProductForm(context))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: products.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return _ProductCard(
+                      product: product,
+                      onEdit: () => _openProductForm(
+                        context,
+                        existing: product,
+                      ),
+                      onDelete: () => _confirmDelete(context, product),
+                    );
+                  },
                 ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _query = value.trim().toLowerCase(); // filter text
-                });
-              },
-            ),
-          ),
-          Expanded(
-            child: products.isEmpty
-                ? _EmptyState(onAdd: () => _openProductForm(context))
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: products.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final product = products[index];
-                      return _ProductCard(
-                        product: product,
-                        onEdit: () => _openProductForm(
-                          context,
-                          existing: product,
-                        ),
-                        onDelete: () => _confirmDelete(context, product),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openProductForm(context),
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah Produk'),
-      ),
+        ),
+      ],
     );
   }
 
@@ -166,6 +176,16 @@ class _ProductCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFECEFF8),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.image, color: Color(0xFF8B93B3)),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,29 +195,38 @@ class _ProductCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 6),
-                  Text('Harga: ${_formatRupiah(product.price)}'),
-                  Text('Stok: ${product.stock}'),
+                  Text('Rp ${product.price.round()}'),
                 ],
               ),
             ),
-            IconButton(
-              tooltip: 'Edit',
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined),
-            ),
-            IconButton(
-              tooltip: 'Hapus',
-              onPressed: onDelete,
-              icon: const Icon(Icons.delete_outline),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'Stok: ${product.stock}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Edit',
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                    IconButton(
+                      tooltip: 'Hapus',
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  String _formatRupiah(double value) {
-    final rounded = value.round();
-    return 'Rp $rounded';
   }
 }

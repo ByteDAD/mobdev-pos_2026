@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/pos_scope.dart';
 import '../models/pos_store.dart';
+import '../widgets/search_field.dart';
 import 'purchase_form_page.dart';
 
 class CheckoutPage extends StatelessWidget {
@@ -16,6 +17,12 @@ class CheckoutPage extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: SearchField(
+            onChanged: (_) {},
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: Row(
             children: [
               Expanded(
@@ -150,16 +157,34 @@ class _CartProductCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(line.product.name, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text('Harga: ${_formatRupiah(line.product.price)}'),
-            Text('Subtotal: ${_formatRupiah(line.subtotal)}'),
-            Text('Stok: ${line.product.stock}'),
-            const SizedBox(height: 12),
-            Row(
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFECEFF8),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.image, color: Color(0xFF8B93B3)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    line.product.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Subtotal: ${_formatRupiah(line.subtotal)}'),
+                  Text('Stok: ${line.product.stock}'),
+                ],
+              ),
+            ),
+            Column(
               children: [
                 IconButton(
                   onPressed: onRemove,
@@ -194,9 +219,9 @@ class _CheckoutSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: const [
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
           BoxShadow(
             blurRadius: 12,
             color: Color(0x1A000000),

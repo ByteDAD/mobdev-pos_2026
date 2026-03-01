@@ -49,7 +49,7 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
           children: [
             TextField(
               controller: _supplierController,
-              decoration: const InputDecoration(labelText: 'Nama Supplier'),
+              decoration: const InputDecoration(labelText: 'Pilih Supplier'),
             ),
             const SizedBox(height: 12),
             Row(
@@ -58,7 +58,7 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
                   child: OutlinedButton.icon(
                     onPressed: () => _pickTime(context),
                     icon: const Icon(Icons.access_time),
-                    label: Text(_time == null ? 'Waktu' : _formatTime(_time!)),
+                    label: Text(_time == null ? 'Waktu pesan' : _formatTime(_time!)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -66,7 +66,7 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
                   child: OutlinedButton.icon(
                     onPressed: () => _pickDate(context),
                     icon: const Icon(Icons.calendar_today),
-                    label: Text(_date == null ? 'Tanggal' : _formatDate(_date!)),
+                    label: Text(_date == null ? 'Tanggal pesan' : _formatDate(_date!)),
                   ),
                 ),
               ],
@@ -92,19 +92,16 @@ class _PurchaseFormPageState extends State<PurchaseFormPage> {
             _TotalSummary(total: _computeTotal(products)),
             const SizedBox(height: 20),
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Batal'),
-                  ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => _save(context, products),
-                    child: const Text('Simpan'),
-                  ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: () => _save(context, products),
+                  child: const Text('Simpan'),
                 ),
               ],
             ),

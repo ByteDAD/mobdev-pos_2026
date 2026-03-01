@@ -5,6 +5,7 @@ import 'models/pos_store.dart';
 import 'screens/about_page.dart';
 import 'screens/checkout_page.dart';
 import 'screens/products_page.dart';
+import 'theme.dart';
 
 void main() {
   runApp(const PosApp());
@@ -15,21 +16,9 @@ class PosApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF0F5FA8),
-    );
-
     return MaterialApp(
       title: 'Simple POS',
-      theme: ThemeData(
-        colorScheme: colorScheme,
-        useMaterial3: true,
-        appBarTheme: AppBarTheme(
-          backgroundColor: colorScheme.surface,
-          foregroundColor: colorScheme.onSurface,
-          centerTitle: false,
-        ),
-      ),
+      theme: AppTheme.theme(),
       home: const HomeShell(),
     );
   }
@@ -64,7 +53,17 @@ class _HomeShellState extends State<HomeShell> {
       store: _store,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.menu),
+          ),
           title: Text(_titleForIndex(_currentIndex)),
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.notifications),
+            ),
+          ],
         ),
         body: SafeArea(
           child: _pages[_currentIndex],
@@ -101,9 +100,9 @@ class _HomeShellState extends State<HomeShell> {
   String _titleForIndex(int index) {
     switch (index) {
       case 0:
-        return 'Daftar Produk';
+        return 'Kelola Produk';
       case 1:
-        return 'Kasir / Checkout';
+        return 'Pembelian';
       case 2:
         return 'Tentang Saya';
       default:

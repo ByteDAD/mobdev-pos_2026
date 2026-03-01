@@ -54,6 +54,32 @@ class _ProductFormPageState extends State<ProductFormPage> {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              Center(
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECEFF8),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Icon(
+                        Icons.image,
+                        size: 42,
+                        color: Color(0xFF8B93B3),
+                      ),
+                    ),
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      child: const Icon(Icons.add, color: Colors.white, size: 18),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nama Produk'),
@@ -95,19 +121,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
               ),
               const SizedBox(height: 24),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Batal'),
-                    ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => _save(context),
-                      child: const Text('Simpan'),
-                    ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () => _save(context),
+                    child: const Text('Simpan'),
                   ),
                 ],
               ),
