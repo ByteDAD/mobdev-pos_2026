@@ -37,6 +37,7 @@ class PosStore extends ChangeNotifier {
   bool _notificationsEnabled = true;
   bool _showNotificationBadge = true;
   bool _lowStockAlert = true;
+  bool _darkMode = false;
 
   PosStore() {
     _seedSuppliers();
@@ -51,6 +52,7 @@ class PosStore extends ChangeNotifier {
   bool get notificationsEnabled => _notificationsEnabled;
   bool get showNotificationBadge => _showNotificationBadge;
   bool get lowStockAlert => _lowStockAlert;
+  bool get darkMode => _darkMode;
 
   List<CartLine> get cartLines {
     return _cart.entries
@@ -295,6 +297,11 @@ class PosStore extends ChangeNotifier {
 
   void updateLowStockAlert(bool value) {
     _lowStockAlert = value;
+    notifyListeners();
+  }
+
+  void updateDarkMode(bool value) {
+    _darkMode = value;
     notifyListeners();
   }
 

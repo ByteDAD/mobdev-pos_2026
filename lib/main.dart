@@ -45,6 +45,8 @@ class _PosAppState extends State<PosApp> {
           return MaterialApp(
             title: 'Simple POS',
             theme: AppTheme.theme(),
+            darkTheme: AppTheme.darkTheme(),
+            themeMode: _store.darkMode ? ThemeMode.dark : ThemeMode.light,
             home: _store.isLoggedIn ? const HomeShell() : const LoginPage(),
           );
         },
