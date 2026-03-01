@@ -5,10 +5,51 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'About me page (coming next)',
-        style: TextStyle(fontSize: 16),
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        const CircleAvatar(
+          radius: 48,
+          child: Icon(Icons.person, size: 48),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Tentang Saya',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 20),
+        _InfoTile(label: 'Nama Lengkap', value: 'Nama Kamu'),
+        _InfoTile(label: 'Nama Panggilan', value: 'Panggilan'),
+        _InfoTile(label: 'Hobi', value: 'Contoh: Ngoding, Musik'),
+        _InfoTile(label: 'Media Sosial', value: '@username'),
+      ],
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(height: 4),
+            Text(value),
+          ],
+        ),
       ),
     );
   }

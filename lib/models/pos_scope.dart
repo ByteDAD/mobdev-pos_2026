@@ -10,7 +10,7 @@ class PosScope extends InheritedNotifier<PosStore> {
   }) : super(notifier: store, child: child);
 
   static PosStore of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<PosScope>();
+    final scope = context.dependOnInheritedWidgetOfExactType<PosScope>(); // state access
     assert(scope != null, 'PosScope not found in widget tree');
     return scope!.notifier!;
   }

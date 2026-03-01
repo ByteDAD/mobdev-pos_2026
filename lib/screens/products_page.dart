@@ -3,30 +3,65 @@ import 'package:flutter/material.dart';
 import '../models/pos_scope.dart';
 import '../models/product.dart';
 
-class ProductsPage extends StatelessWidget {
+class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
+
+  @override
+  State<ProductsPage> createState() => _ProductsPageState();
+}
+
+class _ProductsPageState extends State<ProductsPage> {
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
     final store = PosScope.of(context);
-    final products = store.products;
+    final products = store.products
+        .where((product) => product.name.toLowerCase().contains(_query))
+        .toList();
 
     return Scaffold(
-      body: products.isEmpty
-          ? _EmptyState(onAdd: () => _openProductForm(context))
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: products.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final product = products[index];
-                return _ProductCard(
-                  product: product,
-                  onEdit: () => _openProductForm(context, existing: product),
-                  onDelete: () => _confirmDelete(context, product),
-                );
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Cari produk',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _query = value.trim().toLowerCase(); // filter text
+                });
               },
             ),
+          ),
+          Expanded(
+            child: products.isEmpty
+                ? _EmptyState(onAdd: () => _openProductForm(context))
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: products.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      return _ProductCard(
+                        product: product,
+                        onEdit: () => _openProductForm(
+                          context,
+                          existing: product,
+                        ),
+                        onDelete: () => _confirmDelete(context, product),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openProductForm(context),
         icon: const Icon(Icons.add),
@@ -234,9 +269,7 @@ class _ProductCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    'Harga: ${_formatRupiah(product.price)}',
-                  ),
+                  Text('Harga: ${_formatRupiah(product.price)}'),
                   Text('Stok: ${product.stock}'),
                 ],
               ),
