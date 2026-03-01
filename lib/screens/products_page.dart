@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/pos_scope.dart';
 import '../models/product.dart';
+import 'product_form_page.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -74,106 +75,11 @@ class _ProductsPageState extends State<ProductsPage> {
     BuildContext context, {
     Product? existing,
   }) async {
-    final nameController = TextEditingController(text: existing?.name ?? '');
-    final priceController = TextEditingController(
-      text: existing != null ? existing.price.toStringAsFixed(0) : '',
-    );
-    final stockController = TextEditingController(
-      text: existing != null ? existing.stock.toString() : '',
-    );
-    final formKey = GlobalKey<FormState>();
-    final store = PosScope.of(context);
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(existing == null ? 'Tambah Produk' : 'Ubah Produk'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Produk',
-                  ),
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Nama produk wajib diisi';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: priceController,
-                  decoration: const InputDecoration(
-                    labelText: 'Harga (Rp)',
-                  ),
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    final parsed = double.tryParse(value ?? '');
-                    if (parsed == null || parsed <= 0) {
-                      return 'Harga harus lebih dari 0';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: stockController,
-                  decoration: const InputDecoration(
-                    labelText: 'Stok',
-                  ),
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.done,
-                  validator: (value) {
-                    final parsed = int.tryParse(value ?? '');
-                    if (parsed == null || parsed < 0) {
-                      return 'Stok harus 0 atau lebih';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (!(formKey.currentState?.validate() ?? false)) {
-                  return;
-                }
-                final name = nameController.text.trim();
-                final price = double.parse(priceController.text.trim());
-                final stock = int.parse(stockController.text.trim());
-
-                if (existing == null) {
-                  store.addProduct(name: name, price: price, stock: stock);
-                } else {
-                  store.updateProduct(
-                    existing.copyWith(
-                      name: name,
-                      price: price,
-                      stock: stock,
-                    ),
-                  );
-                }
-                Navigator.pop(context);
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
-        );
-      },
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductFormPage(existing: existing),
+      ),
     );
   }
 

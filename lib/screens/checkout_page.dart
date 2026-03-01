@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/pos_scope.dart';
+import '../models/pos_store.dart';
+import 'purchase_form_page.dart';
 
 class CheckoutPage extends StatelessWidget {
   const CheckoutPage({super.key});
@@ -8,42 +10,62 @@ class CheckoutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = PosScope.of(context); // shared store
-    final products = store.products;
-    final total = store.cartTotal;
-
-    if (products.isEmpty) {
-      return _EmptyCheckoutState(onNavigate: () {});
-    }
+    final cartLines = store.cartLines;
 
     return Column(
       children: [
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: products.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final product = products[index];
-              final qty = store.quantityFor(product.id);
-              return _CartProductCard(
-                name: product.name,
-                price: product.price,
-                stock: product.stock,
-                quantity: qty,
-                onAdd: product.stock > qty
-                    ? () => store.incrementQty(product.id)
-                    : null,
-                onRemove: qty > 0 ? () => store.decrementQty(product.id) : null,
-              );
-            },
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Tambah Pembelian',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              FilledButton.tonalIcon(
+                onPressed: () => _openPurchaseForm(context), // open form
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah'),
+              ),
+            ],
           ),
         ),
+        Expanded(
+          child: cartLines.isEmpty
+              ? _EmptyCheckoutState(onAdd: () => _openPurchaseForm(context))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: cartLines.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final line = cartLines[index];
+                    return _CartProductCard(
+                      line: line,
+                      onAdd: line.quantity < line.product.stock
+                          ? () => store.incrementQty(line.product.id)
+                          : null,
+                      onRemove: line.quantity > 0
+                          ? () => store.decrementQty(line.product.id)
+                          : null,
+                    );
+                  },
+                ),
+        ),
         _CheckoutSummary(
-          total: total,
+          total: store.cartTotal,
           canCheckout: store.canCheckout,
           onCheckout: () => _handleCheckout(context),
         ),
       ],
+    );
+  }
+
+  Future<void> _openPurchaseForm(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PurchaseFormPage()),
     );
   }
 
@@ -76,9 +98,9 @@ class CheckoutPage extends StatelessWidget {
 }
 
 class _EmptyCheckoutState extends StatelessWidget {
-  const _EmptyCheckoutState({required this.onNavigate});
+  const _EmptyCheckoutState({required this.onAdd});
 
-  final VoidCallback onNavigate;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -91,13 +113,19 @@ class _EmptyCheckoutState extends StatelessWidget {
             const Icon(Icons.receipt_long_outlined, size: 64),
             const SizedBox(height: 12),
             Text(
-              'Belum ada produk',
+              'Belum ada item',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             const Text(
-              'Tambahkan produk terlebih dahulu sebelum kasir.',
+              'Tambahkan item untuk mulai transaksi.',
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah Pembelian'),
             ),
           ],
         ),
@@ -108,18 +136,12 @@ class _EmptyCheckoutState extends StatelessWidget {
 
 class _CartProductCard extends StatelessWidget {
   const _CartProductCard({
-    required this.name,
-    required this.price,
-    required this.stock,
-    required this.quantity,
+    required this.line,
     required this.onAdd,
     required this.onRemove,
   });
 
-  final String name;
-  final double price;
-  final int stock;
-  final int quantity;
+  final CartLine line;
   final VoidCallback? onAdd;
   final VoidCallback? onRemove;
 
@@ -131,10 +153,11 @@ class _CartProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(name, style: Theme.of(context).textTheme.titleMedium),
+            Text(line.product.name, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
-            Text('Harga: ${_formatRupiah(price)}'),
-            Text('Stok: $stock'),
+            Text('Harga: ${_formatRupiah(line.product.price)}'),
+            Text('Subtotal: ${_formatRupiah(line.subtotal)}'),
+            Text('Stok: ${line.product.stock}'),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -142,16 +165,11 @@ class _CartProductCard extends StatelessWidget {
                   onPressed: onRemove,
                   icon: const Icon(Icons.remove_circle_outline),
                 ),
-                Text('Qty: $quantity'),
+                Text('Qty: ${line.quantity}'),
                 IconButton(
                   onPressed: onAdd,
                   icon: const Icon(Icons.add_circle_outline),
                 ),
-                if (stock == 0)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Text('Stok habis'),
-                  ),
               ],
             ),
           ],

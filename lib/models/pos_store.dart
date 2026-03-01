@@ -127,6 +127,26 @@ class PosStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setCart(Map<int, int> quantities) {
+    _cart.clear(); // replace cart
+    for (final entry in quantities.entries) {
+      final product = _findProduct(entry.key);
+      if (product == null) {
+        continue;
+      }
+      final clamped = entry.value.clamp(0, product.stock);
+      if (clamped > 0) {
+        _cart[product.id] = clamped;
+      }
+    }
+    notifyListeners();
+  }
+
+  void clearCart() {
+    _cart.clear();
+    notifyListeners();
+  }
+
   Product? _findProduct(int id) {
     final index = _products.indexWhere((product) => product.id == id);
     if (index == -1) {
